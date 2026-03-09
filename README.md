@@ -76,7 +76,7 @@ The application will start on:
 
 - **Base URL**: `http://localhost:8080`
 
-On startup, the `SeedData` configuration inserts some sample **provinces**, **districts**, and **specialties** into the database.
+Seed data is disabled; create provinces, districts, clinics, and specialties via the APIs before testing locations, users, and doctors.
 
 ---
 
@@ -210,7 +210,7 @@ This makes errors easy to read during Postman testing and viva.
 
 ---
 
-## 6. API Testing Guide (by Exam Requirement)
+## 6. API Testing Guide (Complete Reference)
 
 Base URL (default):
 
@@ -220,18 +220,113 @@ http://localhost:8080
 
 ### 6.0 Quick API List
 
-- **Locations**
-  - **POST** `/api/locations` – create a new location linked to a province + district.
-- **Users**
-  - **POST** `/api/users` – create a new user (checks `existsByEmail/Phone`).
-  - **GET** `/api/users` – list all users.
-  - **GET** `/api/users/by-province?code=KGL` – users in a province by code.
-  - **GET** `/api/users/by-province?name=Kigali City` – users in a province by name.
-- **Doctors**
-  - **POST** `/api/doctors` – create a doctor and link with specialties (Many-to-Many).
-  - **GET** `/api/doctors` – list doctors with **pagination + sorting**.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/provinces` | Create province |
+| GET | `/api/provinces` | List all provinces |
+| POST | `/api/districts` | Create district |
+| GET | `/api/districts` | List all districts |
+| POST | `/api/clinics` | Create clinic |
+| GET | `/api/clinics` | List all clinics |
+| GET | `/api/clinics/page` | List clinics (paginated) |
+| POST | `/api/specialties` | Create specialty |
+| GET | `/api/specialties` | List all specialties |
+| POST | `/api/locations` | Create location |
+| POST | `/api/users` | Create user (checks `existsBy` email/phone) |
+| GET | `/api/users` | List all users |
+| GET | `/api/users/page` | List users (paginated) |
+| GET | `/api/users/by-province?code=KGL` | Users by province code |
+| GET | `/api/users/by-province?name=Kigali City` | Users by province name |
+| POST | `/api/doctors` | Create doctor (Many-to-Many with specialties) |
+| GET | `/api/doctors` | List doctors (paginated + sorted) |
+| POST | `/api/patient-profiles` | Create patient profile (One-to-One) |
+| GET | `/api/patient-profiles` | List all patient profiles |
+| GET | `/api/patient-profiles/by-user/{userId}` | Get profile by user id |
+| POST | `/api/appointments` | Create appointment |
+| GET | `/api/appointments` | List all appointments |
+| GET | `/api/appointments/page` | List appointments (paginated) |
+| GET | `/api/appointments/by-patient/{userId}` | Appointments by patient |
+| GET | `/api/appointments/by-doctor/{doctorId}` | Appointments by doctor |
 
-For provinces, districts, clinics and specialties you can query the DB directly in SQL \(e.g. `SELECT * FROM provinces;`\) to confirm what the app has written.
+### 6.0.1 Recommended Test Order
+
+1. **Province** → 2. **District** → 3. **Clinic** → 4. **Specialty** → 5. **User** → 6. **Doctor** → 7. **Location** → 8. **Patient Profile** → 9. **Appointment**
+
+---
+
+### Provinces
+
+**1. Create Province**
+- **POST** `/api/provinces`  
+  Example: `http://localhost:8080/api/provinces`
+```json
+{
+  "code": "KGL",
+  "name": "Kigali City"
+}
+```
+
+**2. List Provinces**
+- **GET** `/api/provinces`  
+  Example: `http://localhost:8080/api/provinces`
+
+---
+
+### Districts
+
+**1. Create District** (requires existing `provinceId`)
+- **POST** `/api/districts`  
+  Example: `http://localhost:8080/api/districts`
+```json
+{
+  "name": "Gasabo",
+  "provinceId": 1
+}
+```
+
+**2. List Districts**
+- **GET** `/api/districts`  
+  Example: `http://localhost:8080/api/districts`
+
+---
+
+### Clinics
+
+**1. Create Clinic** (requires existing `provinceId`, `districtId`)
+- **POST** `/api/clinics`  
+  Example: `http://localhost:8080/api/clinics`
+```json
+{
+  "name": "City Clinic",
+  "provinceId": 1,
+  "districtId": 1
+}
+```
+
+**2. List Clinics**
+- **GET** `/api/clinics`  
+  Example: `http://localhost:8080/api/clinics`
+
+**3. List Clinics (Paginated)**
+- **GET** `/api/clinics/page?page=0&size=5&sortBy=name&direction=asc`  
+  Example: `http://localhost:8080/api/clinics/page?page=0&size=5&sortBy=name&direction=asc`
+
+---
+
+### Specialties
+
+**1. Create Specialty**
+- **POST** `/api/specialties`  
+  Example: `http://localhost:8080/api/specialties`
+```json
+{
+  "name": "General Medicine"
+}
+```
+
+**2. List Specialties**
+- **GET** `/api/specialties`  
+  Example: `http://localhost:8080/api/specialties`
 
 ---
 
@@ -311,6 +406,13 @@ Returns all users whose `province.code = 'KGL'` (case-insensitive).
 
 Returns all users whose `province.name = 'Kigali City'` (case-insensitive).
 
+#### 6.2.5 List Users (Paginated)
+
+- **GET** `/api/users/page?page=0&size=5&sortBy=fullName&direction=asc`  
+  Example: `http://localhost:8080/api/users/page?page=0&size=5&sortBy=fullName&direction=asc`
+
+Query params: `page`, `size`, `sortBy` (e.g. `fullName`, `email`), `direction` (`asc` or `desc`).
+
 **Repository logic (for viva):**
 
 - `List<AppUser> findByProvince_CodeIgnoreCase(String code);`
@@ -324,16 +426,7 @@ Spring Data JPA uses the nested property path (`province.code`, `province.name`)
 
 #### 6.3.1 Pre-requisites
 
-- `Province`, `District`, and `Specialty` rows are auto-seeded by `SeedData`.
-- You need at least one `Clinic` in the DB (insert once via SQL):
-
-```sql
-INSERT INTO clinics(name, province_id, district_id)
-VALUES ('City Clinic', 1, 1)
-RETURNING id;
-```
-
-Use the returned `id` as `clinicId` below.
+Create these first via API: **Province** → **District** → **Clinic** → **Specialty**. Then use their IDs as `clinicId` and `specialtyIds`.
 
 #### 6.3.2 Create Doctor (Many-to-Many with Specialty)
 
@@ -360,6 +453,60 @@ Use the returned `id` as `clinicId` below.
 
 ---
 
+### Patient Profiles (One-to-One with User)
+
+**1. Create Patient Profile** (requires existing `userId`)
+- **POST** `/api/patient-profiles`  
+  Example: `http://localhost:8080/api/patient-profiles`
+```json
+{
+  "userId": 1,
+  "gender": "FEMALE",
+  "bloodGroup": "O+"
+}
+```
+
+**2. List Patient Profiles**
+- **GET** `/api/patient-profiles`  
+  Example: `http://localhost:8080/api/patient-profiles`
+
+**3. Get Profile by User ID**
+- **GET** `/api/patient-profiles/by-user/1`  
+  Example: `http://localhost:8080/api/patient-profiles/by-user/1`
+
+---
+
+### Appointments
+
+**1. Create Appointment** (requires existing `patientUserId`, `doctorId`)
+- **POST** `/api/appointments`  
+  Example: `http://localhost:8080/api/appointments`
+```json
+{
+  "patientUserId": 1,
+  "doctorId": 1,
+  "scheduledAt": "2026-03-10T10:30:00"
+}
+```
+
+**2. List Appointments**
+- **GET** `/api/appointments`  
+  Example: `http://localhost:8080/api/appointments`
+
+**3. List Appointments (Paginated)**
+- **GET** `/api/appointments/page?page=0&size=5&sortBy=scheduledAt&direction=asc`  
+  Example: `http://localhost:8080/api/appointments/page?page=0&size=5&sortBy=scheduledAt&direction=asc`
+
+**4. Appointments by Patient**
+- **GET** `/api/appointments/by-patient/1`  
+  Example: `http://localhost:8080/api/appointments/by-patient/1`
+
+**5. Appointments by Doctor**
+- **GET** `/api/appointments/by-doctor/1`  
+  Example: `http://localhost:8080/api/appointments/by-doctor/1`
+
+---
+
 ### 6.4 Sorting and Pagination (Requirement #3 – Detailed Example)
 
 The **doctors list** endpoint demonstrates both:
@@ -369,7 +516,8 @@ The **doctors list** endpoint demonstrates both:
 
 **Endpoint**
 
-- **GET** `/api/doctors`
+- **GET** `/api/doctors`  
+  Example: `http://localhost:8080/api/doctors?page=0&size=5&sortBy=fullName&direction=asc`
 
 **Query parameters**
 
@@ -435,6 +583,15 @@ Page<Doctor> result = doctorRepository.findAll(pageable);
 - `PageRequest.of(page, size, sort)` builds a `Pageable` object with limit/offset and sort info.
 - `doctorRepository.findAll(pageable)` generates SQL with `ORDER BY` and `LIMIT/OFFSET`.
 - Returning `Page<Doctor>` gives both the **data** and the **metadata** (`totalPages`, `totalElements`, etc.).
+
+#### 6.4.3 All Pagination Endpoints (Quick Copy)
+
+| Endpoint | Example URL |
+|----------|-------------|
+| Users | `http://localhost:8080/api/users/page?page=0&size=5&sortBy=fullName&direction=asc` |
+| Clinics | `http://localhost:8080/api/clinics/page?page=0&size=5&sortBy=name&direction=asc` |
+| Doctors | `http://localhost:8080/api/doctors?page=0&size=5&sortBy=fullName&direction=asc` |
+| Appointments | `http://localhost:8080/api/appointments/page?page=0&size=5&sortBy=scheduledAt&direction=asc` |
 
 ---
 

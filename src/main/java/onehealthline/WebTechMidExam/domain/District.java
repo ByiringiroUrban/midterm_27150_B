@@ -1,5 +1,6 @@
 package onehealthline.WebTechMidExam.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -30,6 +31,7 @@ public class District {
 	private Province province;
 
 	@OneToMany(mappedBy = "district")
+	@JsonIgnore
 	private List<AppUser> users = new ArrayList<>();
 
 	public Long getId() {

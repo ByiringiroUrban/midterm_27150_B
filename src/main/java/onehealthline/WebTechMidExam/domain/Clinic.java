@@ -1,5 +1,6 @@
 package onehealthline.WebTechMidExam.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -34,6 +35,7 @@ public class Clinic {
 	private District district;
 
 	@OneToMany(mappedBy = "clinic")
+	@JsonIgnore
 	private List<Doctor> doctors = new ArrayList<>();
 
 	public Long getId() {

@@ -1,13 +1,17 @@
 package onehealthline.WebTechMidExam.web;
 
 import jakarta.validation.Valid;
-import onehealthline.WebTechMidExam.domain.AppUser;
+import onehealthline.WebTechMidExam.domain.Clinic;
 import onehealthline.WebTechMidExam.domain.District;
 import onehealthline.WebTechMidExam.domain.Province;
+import onehealthline.WebTechMidExam.repo.ClinicRepository;
 import onehealthline.WebTechMidExam.repo.DistrictRepository;
 import onehealthline.WebTechMidExam.repo.ProvinceRepository;
-import onehealthline.WebTechMidExam.repo.UserRepository;
-import onehealthline.WebTechMidExam.web.dto.CreateUserRequest;
+import onehealthline.WebTechMidExam.web.dto.CreateClinicRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,87 +20,60 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users")
-public class UserController {
+@RequestMapping("/api/clinics")
+public class ClinicController {
 
-	private final UserRepository userRepository;
+	private final ClinicRepository clinicRepository;
 	private final ProvinceRepository provinceRepository;
 	private final DistrictRepository districtRepository;
 
-	public UserController(
-			UserRepository userRepository,
+	public ClinicController(
+			ClinicRepository clinicRepository,
 			ProvinceRepository provinceRepository,
 			DistrictRepository districtRepository
 	) {
-		this.userRepository = userRepository;
+		this.clinicRepository = clinicRepository;
 		this.provinceRepository = provinceRepository;
 		this.districtRepository = districtRepository;
 	}
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public AppUser create(@Valid @RequestBody CreateUserRequest req) {
-		if (userRepository.existsByEmailIgnoreCase(req.email())) {
-			throw new IllegalArgumentException("Email already exists: " + req.email());
-		}
-		if (userRepository.existsByPhone(req.phone())) {
-			throw new IllegalArgumentException("Phone already exists: " + req.phone());
-		}
-
+	public Clinic create(@Valid @RequestBody CreateClinicRequest req) {
 		Province province = provinceRepository.findById(req.provinceId())
 				.orElseThrow(() -> new IllegalArgumentException("Province not found: " + req.provinceId()));
 		District district = districtRepository.findById(req.districtId())
 				.orElseThrow(() -> new IllegalArgumentException("District not found: " + req.districtId()));
 
-		AppUser user = new AppUser();
-		user.setFullName(req.fullName());
-		user.setEmail(req.email());
-		user.setPhone(req.phone());
-		user.setProvince(province);
-		user.setDistrict(district);
+		Clinic clinic = new Clinic();
+		clinic.setName(req.name());
+		clinic.setProvince(province);
+		clinic.setDistrict(district);
 
-		return userRepository.save(user);
+		return clinicRepository.save(clinic);
 	}
 
 	@GetMapping
-	public List<AppUser> list() {
-		return userRepository.findAll();
+	public List<Clinic> list() {
+		return clinicRepository.findAll();
 	}
 
 	@GetMapping("/page")
-	public Page<AppUser> listPaginated(
+	public Page<Clinic> listPaginated(
 			@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "10") int size,
-			@RequestParam(defaultValue = "fullName") String sortBy,
+			@RequestParam(defaultValue = "name") String sortBy,
 			@RequestParam(defaultValue = "asc") String direction
 	) {
 		Sort sort = "desc".equalsIgnoreCase(direction)
 				? Sort.by(sortBy).descending()
 				: Sort.by(sortBy).ascending();
 		Pageable pageable = PageRequest.of(page, size, sort);
-		return userRepository.findAll(pageable);
-	}
-
-	@GetMapping("/by-province")
-	public List<AppUser> getUsersByProvince(
-			@RequestParam(required = false) String code,
-			@RequestParam(required = false) String name
-	) {
-		if (code != null && !code.isBlank()) {
-			return userRepository.findByProvince_CodeIgnoreCase(code.trim());
-		}
-		if (name != null && !name.isBlank()) {
-			return userRepository.findByProvince_NameIgnoreCase(name.trim());
-		}
-		throw new IllegalArgumentException("Provide province 'code' OR 'name'");
+		return clinicRepository.findAll(pageable);
 	}
 }
 
