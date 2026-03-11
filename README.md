@@ -438,4 +438,6 @@ The **doctors list** endpoint demonstrates both:
 ---
 
 ## 7. Some Screenshoot 
+![Users API in Postman](images/image.png)
+![Doctors pagination in Postman](images/image2.png)
 
