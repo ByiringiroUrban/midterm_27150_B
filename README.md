@@ -442,10 +442,18 @@ The **doctors list** endpoint demonstrates both:
 ### Entity Relationship Diagram (ERD)
 ![ERD](/images/erd.png)
 
-### Application Screenshot 1
+### Application Screenshots
 ![Application Screenshot 1](/images/image.png)
-
-### Application Screenshot 2
 ![Application Screenshot 2](/images/image2.png)
+![Application Screenshot 2](/images/image3.png)
+![Application Screenshot 2](/images/image4.png)
+![Application Screenshot 2](/images/image5.png)
+![Application Screenshot 2](/images/image6.png)
+![Application Screenshot 2](/images/image7.png)
+![Application Screenshot 2](/images/image8.png)
+![Application Screenshot 2](/images/image9.png)
+![Application Screenshot 2](/images/image10.png)
+![Application Screenshot 2](/images/image11.png)
+![Application Screenshot 2](/images/image12.png)
 
 
