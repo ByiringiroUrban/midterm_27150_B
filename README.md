@@ -437,7 +437,15 @@ The **doctors list** endpoint demonstrates both:
 
 ---
 
-## 7. Some Screenshoot 
-![Users API in Postman](images/image.png)
-![Doctors pagination in Postman](images/image2.png)
+## 7. Screenshots
+
+### Entity Relationship Diagram (ERD)
+![ERD](../images/erd.png)
+
+### Application Screenshot 1
+![Application Screenshot 1](../images/image.png)
+
+### Application Screenshot 2
+![Application Screenshot 2](../images/image2.png)
+
 
